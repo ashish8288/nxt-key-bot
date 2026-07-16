@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>NXT Admin Panel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --border: #334155;
+            --text: #f1f5f9;
+            --sub: #94a3b8;
+            --b: #3b82f6;
+            --g: #22c55e;
+            --r: #ef4444;
+            --y: #eab308;
+            --p: #a855f7;
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 16px;
+            min-height: 100vh;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .header {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 20px;
+            background: linear-gradient(135deg, var(--b), var(--p));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header .badge {
+            background: var(--g);
+            color: #000;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+        }
+        .card h3 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: var(--sub);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .stat-box {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        .stat-box .num {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--b);
+        }
+        .stat-box .label {
+            font-size: 10px;
+            color: var(--sub);
+        }
+        input, textarea {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: var(--text);
+            font-size: 13px;
+            width: 100%;
+            outline: none;
+            margin-bottom: 8px;
+        }
+        input:focus, textarea:focus {
+            border-color: var(--b);
+        }
+        .btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.15s;
+            width: 100%;
+        }
+        .btn-primary { background: var(--b); color: #fff; }
+        .btn-success { background: var(--g); color: #000; }
+        .btn-danger { background: var(--r); color: #fff; }
+        .btn-warning { background: var(--y); color: #000; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 11px;
+            width: auto;
+        }
+        .db-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--bg);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            border: 1px solid var(--border);
+        }
+        .db-item .info { flex: 1; }
+        .db-item .info .url {
+            font-size: 11px;
+            color: var(--sub);
+            word-break: break-all;
+        }
+        .db-item .info .status {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .db-item .info .status.active { background: var(--g); color: #000; }
+        .db-item .info .status.inactive { background: var(--sub); color: #000; }
+        .db-item .actions {
+            display: flex;
+            gap: 4px;
+        }
+        .db-item .actions button {
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: none;
+            font-size: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 8px 20px;
+            border-radius: 12px;
+            font-size: 12px;
+            z-index: 999;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+        .toast.show { opacity: 1; }
+        .toast.success { border-color: var(--g); color: var(--g); }
+        .toast.error { border-color: var(--r); color: var(--r); }
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+        .tabs button {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--sub);
+            font-weight: 600;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .tabs button.active {
+            background: var(--b);
+            color: #fff;
+            border-color: var(--b);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .text-sm { font-size: 12px; }
+        .text-sub { color: var(--sub); }
+        .text-center { text-align: center; }
+        .mt-2 { margin-top: 8px; }
+        .mb-2 { margin-bottom: 8px; }
+        .flex { display: flex; }
+        .gap-2 { gap: 8px; }
+        .flex-wrap { flex-wrap: wrap; }
+        .w-full { width: 100%; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>⚡ NXT Panel</h1>
+        <span class="badge">Admin</span>
+    </div>
+
+    <div class="stats-grid" id="stats">
+        <div class="stat-box"><div class="num" id="userCount">0</div><div class="label">Users</div></div>
+        <div class="stat-box"><div class="num" id="keyCount">0</div><div class="label">Keys</div></div>
+    </div>
+
+    <div class="tabs">
+        <button class="active" onclick="switchTab('databases')">📡 Databases</button>
+        <button onclick="switchTab('users')">👥 Users</button>
+        <button onclick="switchTab('settings')">⚙️ Settings</button>
+    </div>
+
+    <div class="tab-content active" id="tab-databases">
+        <div class="card">
+            <h3>📡 Add Firebase Database</h3>
+            <input id="dbUrl" placeholder="Firebase URL or Panel Link" />
+            <input id="dbKey" placeholder="Auth Key (optional)" type="password" />
+            <button class="btn btn-primary" onclick="addDatabase()">➕ Add Database</button>
+        </div>
+        <div class="card">
+            <h3>📋 Databases</h3>
+            <div id="dbList">Loading...</div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-users">
+        <div class="card">
+            <h3>👥 Users</h3>
+            <div id="userList">Loading...</div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-settings">
+        <div class="card">
+            <h3>⚙️ Settings</h3>
+            <input id="channelId" placeholder="Channel ID (e.g. @Channel)" value="@FireByWorld" />
+            <button class="btn btn-success" onclick="saveSettings()">💾 Save</button>
+        </div>
+        <div class="card">
+            <h3>🎁 Free Keys</h3>
+            <button class="btn btn-warning" onclick="generateFreeKeys()">🎁 Send 48H Keys to All</button>
+        </div>
+        <div class="card">
+            <h3>📢 Announcement</h3>
+            <textarea id="announceMsg" rows="3" placeholder="Type message..."></textarea>
+            <button class="btn btn-primary" onclick="sendAnnouncement()">📢 Send</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        async function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tabs button').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            document.querySelector(`.tabs button[onclick="switchTab('${tab}')"]`).classList.add('active');
+            if (tab === 'databases') loadDatabases();
+            if (tab === 'users') loadUsers();
+        }
+
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast show ' + type;
+            clearTimeout(t._timeout);
+            t._timeout = setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+                document.getElementById('userCount').textContent = data.users || 0;
+                document.getElementById('keyCount').textContent = data.keys || 0;
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadDatabases() {
+            try {
+                const res = await fetch('/api/configs');
+                const data = await res.json();
+                const configs = data || {};
+                const dbList = document.getElementById('dbList');
+                
+                const dbEntries = Object.entries(configs).filter(([key]) => key !== 'activeDb' && key !== 'activeUrl');
+                if (!dbEntries.length) {
+                    dbList.innerHTML = '<div class="text-sub text-sm text-center">No databases added</div>';
+                    return;
+                }
+
+                let html = '';
+                for (const [id, cfg] of dbEntries) {
+                    const isActive = configs.activeDb === id;
+                    html += `
+                        <div class="db-item">
+                            <div class="info">
+                                <div style="font-weight:600;font-size:13px">${cfg.url.replace(/^https?:\/\//, '').slice(0, 30)}...</div>
+                                <div class="url">${cfg.url}</div>
+                                <span class="status ${isActive ? 'active' : 'inactive'}">${isActive ? '● Active' : '○ Inactive'}</span>
+                            </div>
+                            <div class="actions">
+                                ${!isActive ? `<button style="background:var(--b);color:#fff" onclick="setActive('${id}')">Activate</button>` : ''}
+                                <button style="background:var(--r);color:#fff" onclick="removeDb('${id}')">✕</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                dbList.innerHTML = html;
+            } catch (e) {
+                dbList.innerHTML = '<div class="text-sub text-sm">Error loading</div>';
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/users');
+                const data = await res.json();
+                const users = data || {};
+                const el = document.getElementById('userList');
+                
+                if (!Object.keys(users).length) {
+                    el.innerHTML = '<div class="text-sub text-sm text-center">No users yet</div>';
+                    return;
+                }
+
+                let html = '';
+                let count = 0;
+                for (const [id, u] of Object.entries(users)) {
+                    if (count >= 20) {
+                        html += `<div class="text-sub text-sm text-center mt-2">... and ${Object.keys(users).length - 20} more</div>`;
+                        break;
+                    }
+                    const keyCount = u.keys ? Object.keys(u.keys).length : 0;
+                    html += `
+                        <div class="db-item">
+                            <div>
+                                <div style="font-weight:600">${u.firstName || 'Unknown'}</div>
+                                <div class="url">${id}</div>
+                            </div>
+                            <div style="text-align:right">
+                                <div style="font-size:11px;color:var(--sub)">Keys: ${keyCount}</div>
+                                <div style="font-size:11px;color:var(--sub)">Ref: ${u.referrals || 0}</div>
+                            </div>
+                        </div>
+                    `;
+                    count++;
+                }
+                el.innerHTML = html;
+            } catch (e) {
+                document.getElementById('userList').innerHTML = '<div class="text-sub text-sm">Error loading</div>';
+            }
+        }
+
+        async function addDatabase() {
+            const url = document.getElementById('dbUrl').value.trim();
+            const key = document.getElementById('dbKey').value.trim();
+            if (!url) { showToast('⚠️ Enter URL', 'error'); return; }
+            
+            const btn = document.querySelector('#tab-databases .btn-primary');
+            btn.disabled = true;
+            btn.textContent = '⏳ Adding...';
+            
+            try {
+                const res = await fetch('/api/configs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, key })
+                });
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+                showToast('✅ Database added!');
+                document.getElementById('dbUrl').value = '';
+                document.getElementById('dbKey').value = '';
+                loadDatabases();
+                loadStats();
+            } catch (e) {
+                showToast('⚠️ ' + e.message, 'error');
+            }
+            btn.disabled = false;
+            btn.textContent = '➕ Add Database';
+        }
+
+        async function removeDb(id) {
+            if (!confirm('Delete this database?')) return;
+            try {
+                await fetch(`/api/configs/${id}`, { method: 'DELETE' });
+                showToast('✅ Removed');
+                loadDatabases();
+                loadStats();
+            } catch (e) {
+                showToast('⚠️ Error', 'error');
+            }
+        }
+
+        async function setActive(id) {
+            try {
+                await fetch('/api/configs/active', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                showToast('✅ Active database changed');
+                loadDatabases();
+                loadStats();
+            } catch (e) {
+                showToast('⚠️ Error', 'error');
+            }
+        }
+
+        async function generateFreeKeys() {
+            if (!confirm('Send 48H keys to ALL users?')) return;
+            try {
+                await fetch('/api/freekeys', { method: 'POST' });
+                showToast('✅ Keys sent to all users!');
+            } catch (e) {
+                showToast('⚠️ Error', 'error');
+            }
+        }
+
+        async function sendAnnouncement() {
+            const msg = document.getElementById('announceMsg').value.trim();
+            if (!msg) { showToast('⚠️ Enter message', 'error'); return; }
+            try {
+                await fetch('/api/announce', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg })
+                });
+                showToast('✅ Announcement sent!');
+                document.getElementById('announceMsg').value = '';
+            } catch (e) {
+                showToast('⚠️ Error', 'error');
+            }
+        }
+
+        async function saveSettings() {
+            const channel = document.getElementById('channelId').value.trim();
+            try {
+                await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ channel })
+                });
+                showToast('✅ Settings saved');
+            } catch (e) {
+                showToast('⚠️ Error', 'error');
+            }
+        }
+
+        // Initial load
+        loadStats();
+        loadDatabases();
+        loadUsers();
+
+        // Auto refresh every 10 seconds
+        setInterval(loadStats, 10000);
+    </script>
+</body>
+</html>
