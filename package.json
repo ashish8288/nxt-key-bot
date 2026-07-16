@@ -1,0 +1,16 @@
+{
+  "name": "nxt-key-bot",
+  "version": "3.0.0",
+  "description": "Telegram Key Bot with Admin Panel",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "telegraf": "^4.16.3",
+    "firebase": "^10.7.1",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  }
+}
